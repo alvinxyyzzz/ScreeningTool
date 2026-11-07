@@ -212,6 +212,17 @@ function go(page){
  state.page=page==='updates'?'updates':'overview';
  closeDetail();render();window.scrollTo({top:0,behavior:'instant'});
 }
+async function readInput(file){
+ if(!file)return;toast('正在本機解析資料，請勿關閉此畫面…',true);
+ try{
+  let data;
+  if(file.name.toLowerCase().endsWith('.json')){data=validateData(JSON.parse(await file.text()));}
+  else if(/\.(xlsx|xlsm)$/i.test(file.name)){data=validateData(await importWorkbook(file,text=>toast(text,true)));}
+  else throw new Error('目前只支援 .xlsm、.xlsx 或 JSON 私人備份。');
+  state.pending=data;go('updates');toast('解析完成！請檢查下方筆數並確認更新。');
+  document.querySelector('.diff')?.scrollIntoView({block:'center',behavior:'smooth'});
+ }catch(e){console.error(e);toast(`匯入未完成：${e.message}`)}
+}
 function getDB(){return new Promise((resolve,reject)=>{
  const req=indexedDB.open('screening-atlas-private-v1',1);
  req.onupgradeneeded=()=>req.result.createObjectStore('snapshots');
