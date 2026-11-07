@@ -39,37 +39,19 @@
  <symbol id="icon-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="13" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></symbol>
  <symbol id="icon-bookmark" viewBox="0 0 24 24"><path d="M5 3h14v19l-7-5-7 5V3Z"/></symbol>
 </svg>
-<div id="app">
- <aside class="sidebar">
-  <button class="brand" data-view="overview" aria-label="Screening Atlas 首頁">
-   <img src="./assets/icon-192.png" class="brand-icon" alt=""/>
-   <span class="brand-word">screening<span class="brand-subword">atlas<span class="brand-dot">.</span></span></span>
+<div id="app" class="simple-app">
+ <header class="simple-header">
+  <button class="simple-logo" data-view="overview" aria-label="Screening 搜尋首頁">
+   <img src="./assets/icon-192-v4.png" width="39" height="39" alt=""/>
+   <span><strong>Screening</strong><small>Factory history</small></span>
   </button>
-  <div class="side-kicker">WORKSPACE <span>01</span></div>
-  <nav class="side-nav" aria-label="主要導覽">
-   <button data-view="overview" class="nav-link selected"><svg><use href="#icon-grid"/></svg>總覽<span class="shortcut">G</span></button>
-   <button data-view="screen" class="nav-link"><svg><use href="#icon-search"/></svg>工廠篩查<span class="shortcut">S</span></button>
-   <button data-view="library" class="nav-link"><svg><use href="#icon-database"/></svg>合作資料庫</button>
-   <button data-view="quality" class="nav-link"><svg><use href="#icon-shield"/></svg>資料健康度</button>
-   <button data-view="updates" class="nav-link"><svg><use href="#icon-upload"/></svg>資料更新</button>
-  </nav>
-  <div class="sidebar-bottom">
-   <div class="privacy-panel"><div class="privacy-symbol"><svg><use href="#icon-lock"/></svg></div><div><strong>Private by design</strong><span>資料只存在你的裝置</span></div></div>
-   <div class="sidebar-footer"><span id="side-database">尚未匯入資料</span><span class="version-badge">v 1.0</span></div>
-  </div>
- </aside>
- <div class="workspace">
-  <header class="topbar"><div class="topbar-left"><div class="breadcrumb">YOUR WORKSPACE <span>/</span> <strong id="breadcrumb">總覽</strong></div></div><div class="topbar-actions"><span class="local-pill"><span class="local-indicator"></span> ON-DEVICE</span><button type="button" class="outline-btn top-import" data-action="pick-file"><svg><use href="#icon-upload"/></svg> 更新資料</button></div></header>
-  <main class="main-content" id="main-content" tabindex="-1"></main>
- </div>
+  <span class="simple-header-caption">FACTORY COOPERATION LOOKUP</span>
+  <div class="simple-header-status"><span class="lookup-dot"></span><span id="side-database">尚未載入查詢資料</span></div>
+  <span id="breadcrumb" hidden></span>
+ </header>
+ <main id="main-content" class="simple-main" tabindex="-1"></main>
+ <footer class="simple-footer"><span>SCREENING · INTERNAL REFERENCE</span><span>歷史紀錄僅供參考，正式判斷請核對來源</span></footer>
 </div>
-<nav class="mobile-nav" aria-label="手機導覽">
- <button data-view="overview" class="mobile-link selected"><svg><use href="#icon-grid"/></svg><span>總覽</span></button>
- <button data-view="screen" class="mobile-link"><svg><use href="#icon-search"/></svg><span>篩查</span></button>
- <button data-view="library" class="mobile-link"><svg><use href="#icon-database"/></svg><span>資料庫</span></button>
- <button data-view="quality" class="mobile-link"><svg><use href="#icon-shield"/></svg><span>檢查</span></button>
- <button data-view="updates" class="mobile-link"><svg><use href="#icon-upload"/></svg><span>更新</span></button>
-</nav>
 <input id="file-picker" type="file" accept=".xlsx,.xlsm,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12" hidden/>
 <div id="drawer" class="drawer-backdrop" hidden></div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

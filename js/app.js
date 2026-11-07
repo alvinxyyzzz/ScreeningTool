@@ -21,27 +21,68 @@ function buttonAction(action,label,kind='outline-btn',iconName=''){return `<butt
 function startImport(){ $('#file-picker').click(); }
 function shortStatus(f){return f.external?badge('Source only','blue'):f.risks.length?badge('需複核','orange'):f.strategics.length?badge('Strategic','green'):badge('已收錄','gray')}
 function renderEmptyLanding(){
- return `${pageHead('FACTORY INTELLIGENCE · PRIVATE WORKSPACE','你的工廠資料，<span class="serif-em">一眼看懂。</span>','把分散的歷史合作、品牌、工廠與戰略名單整理成真正可搜尋、可追溯的工作台。')}
- <section class="welcome-hero"><div class="hero-eyebrow">YOUR DATABASE. YOUR DEVICE.</div><h2>From spreadsheets<br/>to <span style="color:#b2f774">clear decisions.</span></h2><p>直接匯入你每月更新的 Excel .xlsm 檔案。不需要先轉 JSON，也不會上傳到任何伺服器。完整搜尋、篩查、來源明細與異常提醒都留在你的裝置。</p><button class="mint-btn" data-action="pick-file">${ICON('upload')} 匯入 Screening Tool Excel ${ICON('arrow')}</button></section>
- <div class="onboarding-grid"><div class="card"><div class="step-badge">01 / IMPORT</div><h3>匯入 Excel</h3><p>支援你現有的 .xlsm 與私人 JSON 備份。不執行任何巨集。</p></div><div class="card"><div class="step-badge">02 / SCREEN</div><h3>查詢工廠關聯</h3><p>比對 Higg ID、工廠名稱及國家，查閱 CTA、CTS、CTM 等合作紀錄。</p></div><div class="card"><div class="step-badge">03 / REVIEW</div><h3>掌握資料風險</h3><p>提示多重 Higg ID、跨國合併及來源資料缺口，避免誤判。</p></div></div>`;
+ return `<section class="lookup-state"><div class="lookup-state-icon">${ICON('lock')}</div><h2>這台裝置尚未載入查詢資料</h2><p>請由資料維護者在本機準備最新版 Screening 資料後再查詢。網頁程式本身不包含公司的完整工廠資料。</p><div class="lookup-muted">一般使用者無需查看 Excel Master List 或資料維護頁面。</div></section>`;
 }
 function renderOverview(){
- if(!state.model)return renderEmptyLanding();
- const m=state.model,st=m.stats;
- const recent=[...m.facilities].sort((a,b)=>b.engagements.length-a.engagements.length).slice(0,6);
- const source=Object.entries(m.sourceCounts).sort((a,b)=>b[1]-a[1]).slice(0,6),max=Math.max(...source.map(x=>x[1]),1);
- return `${pageHead('YOUR DATA AT A GLANCE','工廠合作情報，<span class="serif-em">盡在掌握。</span>','由你的 Screening Tool 資料庫建立 · 每個結果都能追溯到原始來源。',buttonAction('pick-file','更新 Excel','outline-btn','upload'))}
- <section class="hero"><div><div class="hero-eyebrow">QUICK SCREENING / 01</div><h2>從一間工廠開始，<br/><span>找到完整合作脈絡。</span></h2><p>輸入工廠名稱或 Higg ID，探索過往品牌、服務、評估與戰略名單。</p><form id="hero-form" class="search-wide">${ICON('search')}<input aria-label="搜尋工廠" name="quick-search" placeholder="例如：Envoy Textiles · 42555" autocomplete="off"/><button class="dark-btn" type="submit">開始篩查 ${ICON('arrow')}</button></form></div><div class="hero-art" aria-hidden="true">${ICON('layers')}<span class="orbit"></span></div></section>
- <section class="section grid-4">${metric('MASTER FACTORIES',st.facilities,'已整併的工廠主紀錄','database')}${metric('ENGAGEMENT RECORDS',st.engagements,'含多種服務及執行階段','layers')}${metric('STRATEGIC ENTRIES',st.strategic,'戰略名單來源紀錄','spark')}${metric('REVIEW FLAGS',st.risks,'潛在異常 Master 合併','alert',true)}</section>
- <section class="section split-layout"><div class="card card-pad">${sectionHead('合作紀錄較多的工廠','可點選查看各品牌與專案來源',`<button data-view="library">查看全部 ${ICON('arrow')}</button>`)}<div class="table-scroll"><table class="simple-table"><thead><tr><th>工廠名稱</th><th>國家</th><th>紀錄</th></tr></thead><tbody>${recent.map(f=>`<tr class="row-click" data-action="detail" data-id="${safe(f.id)}"><td><div class="table-name">${safe(clip(f.name,40))}</div><div class="table-country">Higg ${safe(f.higgs.join(', ')||'—')}</div></td><td class="table-country">${safe(lines(f.country)[0]||'—')}</td><td>${badge(f.engagements.length+' entries','green')}</td></tr>`).join('')}</tbody></table></div></div><div class="card card-pad">${sectionHead('資料來源分布','資料來自不同歷史 tracker 與計畫')}${source.map(([name,n])=>`<div class="bar-row"><span class="bar-label" title="${safe(name)}">${safe(name.replace(' database','').replace(' tracker_',' · '))}</span><span class="bar-track"><span class="bar-fill" style="display:block;width:${Math.max(2,n/max*100)}%"></span></span><span class="bar-num">${count(n)}</span></div>`).join('')}<div class="meta-foot">此處是來源列數，並非獨立工廠數或減碳成效。</div></div></section>`;
+ const v=state.screenInputs||{};
+ const query=v.query||v.higg||v.name||'';
+ const advanced=!!(v.country||v.brand);
+ return `<section class="lookup-intro">
+   <div class="lookup-eyebrow"><span class="lookup-dot"></span>FACTORY ENGAGEMENT LOOKUP</div>
+   <h1>這家工廠，<span>我們合作過嗎？</span></h1>
+   <p>搜尋工廠名稱或 Higg ID，快速確認歷史合作、服務項目、品牌與評估紀錄。</p>
+ </section>
+ <section class="lookup-panel">
+  <form id="screen-form" class="lookup-form">
+   <label for="screen-query">搜尋工廠</label>
+   <div class="lookup-input-row">
+    <div class="lookup-input-wrap">${ICON('search')}<input type="search" name="query" id="screen-query" autocomplete="off" spellcheck="false" value="${safe(query)}" placeholder="輸入工廠名稱或 Higg ID…" ${!state.model?'disabled':''}/></div>
+    <button class="lookup-submit" type="submit" ${!state.model?'disabled':''}>搜尋 ${ICON('arrow')}</button>
+   </div>
+   <div class="lookup-helpers">
+    <span>建議優先使用 Higg ID，或輸入完整的工廠名稱。</span>
+    <details class="lookup-advanced" ${advanced?'open':''}><summary>${ICON('filter')} 進階篩選</summary><div class="lookup-filters">
+      <div class="lookup-filter"><label for="screen-country">國家（選填）</label><input id="screen-country" name="country" list="country-options" value="${safe(v.country||'')}" placeholder="例如 Vietnam" /></div>
+      <div class="lookup-filter"><label for="screen-brand">品牌（選填）</label><input id="screen-brand" name="brand" value="${safe(v.brand||'')}" placeholder="例如 lululemon" /></div>
+     </div></details>
+    ${state.model?`<datalist id="country-options">${state.model.countryOptions.map(c=>`<option value="${safe(c)}"></option>`).join('')}</datalist>`:''}
+   </div>
+  </form>
+ </section>
+ <div id="result-anchor">${screenResultsHTML()}</div>
+ ${state.model?`<section class="lookup-batch"><details ${state.screenBatch?'open':''}>
+ <summary><span>${ICON('layers')} <strong>需要一次查多家工廠？</strong><small>展開批次查詢</small></span>${ICON('chevron')}</summary>
+ <div class="batch-inner"><p>每行一間工廠，格式：<strong>工廠名稱, 國家, Higg ID</strong>（後兩欄可留空），最多 200 筆。</p>
+ <textarea id="batch-input" aria-label="批次查詢工廠" placeholder="Envoy Textiles, Bangladesh, 42555&#10;Everest Textile, Taiwan, 5506"></textarea>
+ <div class="batch-actions"><button class="lookup-submit" data-action="batch" type="button">執行批次查詢</button>
+ ${state.screenBatch?`<span>已完成 ${state.screenBatch.length} 筆，其中 ${state.screenBatch.filter(x=>x.match).length} 筆找到候選</span><button class="batch-export" data-action="export-batch" type="button">${ICON('download')} 下載 CSV 結果</button>`:''}</div></div>
+ </details></section>`:''}
+ <div class="lookup-footnote">本工具僅供查詢歷史資料；「未找到紀錄」不代表從未合作。名稱近似或多個 Higg ID 的結果需要人工核對。資料保存在此裝置，不會自動同步。</div>`;
 }
-function screenResultItem(r){const f=r.facility;
- return `<article class="card result-card" data-action="detail" data-id="${safe(f.id)}" tabindex="0" role="button"><div><div class="result-top">${badge(r.tier==='exact'?'高度匹配':r.tier==='probable'?'相似匹配':'建議複核',`confidence-${r.tier}`)}<span>${safe(r.reason)}</span>${f.external?badge('非合作 Master','blue'):''}</div><h3 class="result-name">${safe(f.name)}</h3><div class="result-mid"><span>${safe(lines(f.country)[0]||'國家未知')}</span><span>·</span><span>Higg ${safe(f.higgs.join(' / ')||'—')}</span>${f.risks.length?badge('需複核','orange'):''}</div><div class="result-mid" style="margin-top:10px">${programBadges(f)}</div></div><div class="result-meta">${ICON('chevron')}<div class="result-count">${f.engagements.length} 筆合作<br/>${f.strategics.length} 筆戰略</div></div></article>`;
+function screenResultItem(r){
+ const f=r.facility;
+ const hasCooperation=f.engagements.length>0;
+ const status=hasCooperation?'有歷史合作紀錄':f.implementations.length?'有服務執行紀錄':f.assessments.length?'有評估紀錄':f.strategics.length?'僅出現在名單':'其他來源紀錄';
+ const style=hasCooperation?'status-found':f.implementations.length||f.assessments.length?'status-assessed':'status-list';
+ const services=f.programs.slice(0,4).map(x=>badge(x)).join('');
+ const brands=f.brands.slice(0,3).join(' · ');
+ return `<article class="lookup-result" data-action="detail" data-id="${safe(f.id)}" tabindex="0" role="button" aria-label="查看 ${safe(f.name)} 的歷史紀錄">
+ <div class="lookup-result-main"><div class="lookup-result-top"><span class="record-status ${style}"><span class="status-dot"></span>${status}</span><span class="match-hint">${r.tier==='review'?'身份需再確認':r.reason}</span></div>
+ <h3>${safe(f.name)}</h3><div class="lookup-result-place">${safe(lines(f.country).join(' / ')||'國家未記錄')} <span>·</span> Higg ID ${safe(f.higgs.join(' / ')||'未記錄')}</div>
+ <div class="lookup-result-tags">${services}${brands?`<span class="tag brand-preview">${safe(brands)}</span>`:''}${f.risks.length?badge('身份待核對','orange'):''}</div>
+ </div><div class="lookup-result-side"><strong>${count(f.engagements.length)}</strong><span>筆歷史合作</span><div class="lookup-open">查看紀錄 ${ICON('arrow')}</div></div></article>`;
 }
 function screenResultsHTML(){
- if(state.screenResults===null)return `<div class="card empty-block"><div class="empty-symbol">${ICON('search')}</div><h3>準備好你的第一筆篩查</h3><p>建議優先用 Higg ID，比單靠工廠名稱更可靠；若只輸入名稱，會明確標示匹配可信度。</p></div>`;
- if(!state.screenResults.length)return `<div class="card empty-block"><div class="empty-symbol">${ICON('alert')}</div><h3>這次沒有找到可信的匹配</h3><p>不代表工廠一定沒有合作紀錄。請嘗試英文別名、Higg ID，或放寬國家條件；來源資料可能尚未完整收錄。</p></div>`;
- return `<div class="inline-note" style="margin-bottom:12px">已找到 ${state.screenResults.length} 筆候選。匹配標籤僅表示查詢相似度，並不保證同一法人或同一廠址；請點開來源明細確認。</div><div class="results-list">${state.screenResults.map(screenResultItem).join('')}</div>`;
+ if(!state.model)return renderEmptyLanding();
+ if(state.screenResults===null)return `<div class="lookup-before"><div class="before-heading">查詢後可以看到</div><div class="before-grid">
+ <div>${ICON('check')}<strong>合作紀錄</strong><span>過去是否有接觸或合作</span></div>
+ <div>${ICON('layers')}<strong>服務與品牌</strong><span>CTA、CTS、CTM 等相關項目</span></div>
+ <div>${ICON('clock')}<strong>時間與來源</strong><span>方便核對歷史紀錄</span></div>
+ </div></div>`;
+ if(!state.screenResults.length)return `<section class="lookup-state lookup-no-results"><div class="lookup-state-icon">${ICON('search')}</div><h2>目前沒有找到匹配紀錄</h2><p>可試試完整英文名稱、其他廠名或 Higg ID，並移除進階篩選。這不代表一定沒有合作歷史。</p></section>`;
+ return `<section class="lookup-results"><div class="lookup-results-head"><div><div class="lookup-eyebrow">SEARCH RESULTS</div><h2>找到 ${state.screenResults.length} 筆可能匹配的工廠</h2></div><span>點開查看歷史紀錄</span></div>
+ ${state.screenResults.map(screenResultItem).join('')}
+ <p class="lookup-results-note">${ICON('alert')} 結果依名稱及識別碼匹配程度排序；同名工廠或資料合併異常需再核對。</p></section>`;
 }
 function renderScreen(){
  if(!state.model)return renderNoData('篩查前先匯入資料','工廠篩查需要你本機的 Excel 資料庫。');
@@ -87,40 +128,53 @@ function updatesPreview(){
 }
 function renderUpdates(){
  const m=state.model;
- return `${pageHead('ONE FILE. EVERY MONTH.','更新資料，<span class="serif-em">不再折騰。</span>','你照舊維護 Excel。新版只需直接在 iPhone 或 Mac 匯入更新檔；無須手動轉 JSON、重新上傳網頁。')}
- <div class="update-grid"><div class="card card-pad"><div class="section-head"><div><h2>Excel → Screening Atlas</h2><p>只在本機解析與儲存，不連上傳 API。</p></div></div><button class="import-zone" data-action="pick-file" style="width:100%">${ICON('upload')}<h3>選擇新的 .xlsm / .xlsx</h3><p>從 iPhone「檔案」選 Excel，或從 Mac 選擇本機檔案。也支援匯入 JSON 私人備份。</p><span class="dark-btn">選擇檔案 ${ICON('arrow')}</span></button><div class="meta-foot">支援 Safari 16.4+。VBA 不會執行；匯入前請先確認 Excel 計算結果已更新。請勿把私人資料 JSON 放到公開 GitHub。</div></div>
- <div class="card card-pad">${sectionHead('目前版本 / CURRENT SNAPSHOT','你在這個裝置上使用的資料')}
- ${m?`<div class="source-row"><strong>檔案</strong><span>${safe(clip(state.data.meta?.name,38))}</span></div><div class="source-row"><strong>匯入版本日期</strong><span>${safe(state.data.meta?.created||'—')}</span></div><div class="source-row"><strong>MASTER</strong><span>${count(m.stats.facilities)} 筆</span></div><div class="source-row"><strong>ENGAGEMENTS</strong><span>${count(m.stats.engagements)} 筆</span></div><div class="source-row"><strong>SHA-256</strong><span class="mono">${safe((state.data.meta?.sha256||'').slice(0,15))}…</span></div><div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:20px">${buttonAction('export-backup','下載私人備份 JSON','outline-btn','download')}${state.previous?buttonAction('restore-previous','回復前一版本','soft-btn','clock'):''}</div>`:`<div class="empty-block" style="padding:30px"><p>此裝置尚無已匯入版本。</p></div>`}</div></div>
+ const fileName=state.data?.meta?.name||'尚未匯入資料';
+ return `<div class="manage-back"><button data-view="overview" class="outline-btn">${ICON('arrow')} 返回工廠搜尋</button></div>
+ <div class="manage-head"><div class="lookup-eyebrow">MAINTAINER WORKSPACE · LOCAL ONLY</div><h1>資料更新</h1><p>僅供資料維護者操作。你的 Excel 仍是主資料來源；本頁不會上傳檔案到 GitHub。</p></div>
+ <div class="manage-grid"><section class="card card-pad"><h2>匯入新版 Excel</h2><p>支援 .xlsm、.xlsx 和私人 JSON 備份；僅在此裝置解析，不會執行 VBA。</p><button class="import-zone" data-action="pick-file" type="button">${ICON('upload')}<h3>選擇檔案</h3><p>匯入後會先顯示差異，確認才會取代這台裝置的資料。</p></button></section>
+ <section class="card card-pad"><h2>目前本機版本</h2><div class="source-row"><strong>檔案</strong><span>${safe(clip(fileName,32))}</span></div><div class="source-row"><strong>匯入日期</strong><span>${safe(state.data?.meta?.created||'—')}</span></div>
+ ${m?`<div class="manage-actions">${buttonAction('export-backup','下載私人 JSON 備份','outline-btn','download')}${state.previous?buttonAction('restore-previous','回復上一版','soft-btn','clock'):''}</div>`:'<p class="manage-muted">目前沒有已匯入版本。</p>'}
+ </section></div>
  ${updatesPreview()}
- ${m?`<section class="section update-grid"><div class="card card-pad">${sectionHead('Source freshness / 各來源更新標記','擷取自 Excel 各 Input 工作表第一列')}${stampsHTML(state.data.meta?.sourceStamps)}</div><div class="card card-pad">${sectionHead('Update log','來源 Excel 的逐次維護紀錄')}<div class="table-scroll"><table class="simple-table"><thead><tr><th>日期</th><th>維護者</th><th>更新項目</th></tr></thead><tbody>${state.data.updates.slice(-10).reverse().map(u=>`<tr><td class="mono">${safe(u.date)}</td><td>${safe(u.owner)}</td><td class="table-country">${safe(Object.entries(u).filter(([k,v])=>k!=='owner'&&k!=='date'&&v).map(([k,v])=>k+(v==='✔'?'':` (${v})`)).join(', '))}</td></tr>`).join('')}</tbody></table></div></div></section>`:''}
- <section class="section"><div class="inline-note"><strong>安全提醒：</strong>「同一個 App 網址」不代表「同一份跨裝置資料」。目前是隱私優先的本機版：每台裝置各自匯入一次，沒有自動跨裝置同步。若之後要多人協作、自動同步與管理權限，再增加私有後端更合適。</div></section>`;
+ <p class="lookup-detail-disclaimer">請先在 Excel 重新計算並儲存，再匯入。每個裝置的資料彼此獨立；此頁不具備登入與權限驗證功能，網址隱藏並不等於資料保護。</p>`;
 }
 function render(){
- document.title=`${titles[state.page]} · Screening Atlas`;
- $('#breadcrumb').textContent=titles[state.page];
- $('#side-database').textContent=state.data?`${count(state.model?.stats.facilities)} FACTORIES · LOCAL`:'尚未匯入資料';
- for(const b of document.querySelectorAll('[data-view]'))b.classList.toggle('selected',b.dataset.view===state.page);
- const pages={overview:renderOverview,screen:renderScreen,library:renderLibrary,quality:renderQuality,updates:renderUpdates};
- $('#main-content').innerHTML=pages[state.page]();
+ if(!state.routeReady){state.routeReady=true;if(new URLSearchParams(location.search).get('manage')==='1')state.page='updates';}
+ if(state.page!=='updates')state.page='overview';
+ document.title=(state.page==='updates'?'資料更新':'Screening')+' · Factory History';
+ const crumb=$('#breadcrumb');if(crumb)crumb.textContent=state.page==='updates'?'維護資料':'搜尋工廠';
+ const db=$('#side-database');if(db)db.textContent=state.model?'查詢資料已就緒':'尚未載入查詢資料';
+ $('#main-content').innerHTML=state.page==='updates'?renderUpdates():renderOverview();
 }
-
 function detailHTML(f){
- const main=state.model;
- const record=(head,sub,extra)=>`<div class="detail-record"><div class="detail-record-top"><strong>${safe(head||'—')}</strong><small>${safe(sub||'')}</small></div>${extra?`<p>${safe(extra)}</p>`:''}</div>`;
- const topBrands=[...new Set(f.brands)].slice(0,12),parent=[...new Set(f.parents.map(p=>p.parent))];
- return `<div class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"><div class="drawer-top"><span class="mini-label">${f.external?'SOURCE-ONLY · NOT LINKED TO MASTER':'FACTORY INTELLIGENCE / MASTER #'+safe(f.id)}</span><button class="round-icon-btn" data-action="close-drawer" aria-label="關閉">${ICON('close')}</button></div>
- <h2 id="drawer-title" class="drawer-title">${safe(f.name)}</h2><p class="drawer-sub">${safe(lines(f.country).join(', ')||'國家未知')} · Higg ID：${safe(f.higgs.join(' / ')||'無紀錄')} · ${safe(lines(f.tier).join(' / ')||'Tier 未知')}</p>
- <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px">${programBadges(f)}${f.risks.length?badge('需人工確認','orange'):''}</div>
- ${f.external?'<div class="inline-note" style="margin-top:17px">這是原始來源名單中的獨立工廠，尚未安全連到 Engagement Master。此處不代表已合作，也不代表已完成評估。</div>':''}<div class="drawer-stats"><div class="drawer-stat"><strong>${count(f.engagements.length)}</strong><span>來源合作紀錄</span></div><div class="drawer-stat"><strong>${count(f.strategics.length)}</strong><span>Strategic entries</span></div><div class="drawer-stat"><strong>${count(f.assessments.length)}</strong><span>Assessments</span></div></div>
- ${f.risks.length?`<div class="warn-inline"><strong>身份與合併提醒</strong><div style="margin-top:5px">${safe(f.risks.join('；'))}。請以原始來源確認多個廠址/識別碼是否真的屬同一工廠。</div></div>`:''}
- <section class="drawer-section"><h3>KNOWN ALIASES · 工廠別名</h3><div class="detail-list">${(f.names.length?f.names:[f.name]).slice(0,18).map(x=>record(x,'Recorded name')).join('')}</div></section>
- ${parent.length?`<section class="drawer-section"><h3>MANUFACTURER / PARENT GROUP</h3><div class="detail-list">${parent.map(x=>record(x,'Manufacturer info')).join('')}</div></section>`:''}
- <section class="drawer-section"><h3>BRANDS · 關聯品牌</h3><div style="display:flex;gap:5px;flex-wrap:wrap">${topBrands.length?topBrands.map(x=>badge(x,'blue')).join(''):badge('尚無','gray')}</div></section>
- <section class="drawer-section"><h3>ENGAGEMENT RECORDS · 合作明細 (${f.engagements.length})</h3><div class="detail-list">${f.engagements.length?f.engagements.slice(0,120).map(e=>record(e.brand||e.source,e.source,`${e.services||'未標服務'} · ${e.start||'—'} – ${e.end||'—'} · ${e.ctaVersion||''} · ${e.name}`)).join(''):record('沒有已連結合作紀錄','','')}</div></section>
- ${f.strategics.length?`<section class="drawer-section"><h3>STRATEGIC LISTS (${f.strategics.length})</h3><div class="detail-list">${f.strategics.slice(0,35).map(e=>record(e.source,'Strategic source',`${e.name} · Higg ${e.higg||'—'}`)).join('')}</div></section>`:''}
- ${f.assessments.length?`<section class="drawer-section"><h3>ASSESSMENT RECORDS (${f.assessments.length})</h3><div class="detail-list">${f.assessments.slice(0,45).map(e=>record(e.brand,e.date,`${e.method} · ${e.engineer||'未標工程師'} · ${e.name}`)).join('')}</div></section>`:''}
- ${f.implementations.length?`<section class="drawer-section"><h3>IMPLEMENTATION SERVICES (${f.implementations.length})</h3><div class="detail-list">${f.implementations.slice(0,35).map(e=>record(e.services,e.status,`${e.brand} · ${e.start}–${e.end} · ${e.owner}`)).join('')}</div></section>`:''}
- <div class="meta-foot">來源：你匯入的 Excel Master list、Consolidated list、Strategic list、Assessment Records、Implementation records、Manufacturer info。顯示結果為歷史資料，不代表現在仍有合約或專案進行中。輔助資料使用保守的唯一識別連結。</div></div>`;
+ const companies=[...new Set(f.brands)].filter(Boolean);
+ const parents=[...new Set(f.parents.map(x=>x.parent).filter(Boolean))];
+ const gotHistory=f.engagements.length>0;
+ const status=gotHistory?'有歷史合作紀錄':f.implementations.length?'有服務執行紀錄':f.assessments.length?'有評估紀錄':f.strategics.length?'僅出現在名單':'其他來源紀錄';
+ const item=(h,meta,sub)=>`<div class="history-item"><div class="history-line"></div><div class="history-copy"><strong>${safe(h||'未記錄服務')}</strong><div class="history-meta">${safe(meta||'未記錄日期')}</div>${sub?`<div class="history-sub">${safe(sub)}</div>`:''}</div></div>`;
+ const engagements=f.engagements.map(e=>{
+  const dates=[e.start,e.end].filter(Boolean).join(' – ')||'時間未記錄';
+  return item(e.services||e.source||'合作紀錄',[e.brand,dates].filter(Boolean).join(' · '),`來源：${e.source||'未註明'}${e.name?' · 登記工廠：'+e.name:''}`);
+ }).join('');
+ const assessments=f.assessments.map(e=>item('工廠評估',[e.brand,e.date,e.method].filter(Boolean).join(' · '),e.engineer?'負責人員：'+e.engineer:'')).join('');
+ const implementations=f.implementations.map(e=>item(e.services||'Implementation',[e.brand,e.status,[e.start,e.end].filter(Boolean).join(' – ')].filter(Boolean).join(' · '),e.owner?'負責人員：'+e.owner:'')).join('');
+ const strategicNames=[...new Set(f.strategics.map(x=>x.source).filter(Boolean))];
+ return `<div class="drawer lookup-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+  <div class="drawer-top"><span class="mini-label">FACTORY HISTORY</span><button class="round-icon-btn" data-action="close-drawer" aria-label="關閉明細">${ICON('close')}</button></div>
+  <div class="lookup-detail-heading"><span class="record-status ${gotHistory?'status-found':f.assessments.length||f.implementations.length?'status-assessed':'status-list'}">${status}</span><h2 id="drawer-title" class="drawer-title">${safe(f.name)}</h2>
+  <p class="drawer-sub">${safe(lines(f.country).join(' / ')||'國家未記錄')} · Higg ID：${safe(f.higgs.join(' / ')||'未記錄')}${f.tier?' · '+safe(lines(f.tier).join(' / ')):''}</p></div>
+  ${f.risks.length?`<div class="warn-inline"><strong>請先核對工廠身份：</strong>${safe(f.risks.join('；'))}。系統不會把不同廠址自動視為同一家。</div>`:''}
+  <div class="lookup-detail-stats"><div><strong>${f.engagements.length}</strong><span>合作紀錄</span></div><div><strong>${f.assessments.length}</strong><span>評估紀錄</span></div><div><strong>${f.strategics.length}</strong><span>戰略名單</span></div></div>
+  <section class="lookup-detail-section"><h3>歷史合作紀錄 <span>${f.engagements.length}</span></h3>
+  ${engagements||'<p class="lookup-detail-empty">目前沒有已確認連結的歷史合作紀錄。</p>'}
+  </section>
+  ${implementations?`<section class="lookup-detail-section"><h3>執行服務紀錄 <span>${f.implementations.length}</span></h3>${implementations}</section>`:''}
+  ${assessments?`<section class="lookup-detail-section"><h3>評估紀錄 <span>${f.assessments.length}</span></h3>${assessments}</section>`:''}
+  ${strategicNames.length?`<section class="lookup-detail-section"><h3>出現在戰略／品牌名單</h3><p class="lookup-detail-desc">名單命中不等於已經合作。</p><div class="lookup-mini-tags">${strategicNames.slice(0,24).map(n=>badge(n,'blue')).join('')}</div></section>`:''}
+  ${companies.length?`<section class="lookup-detail-section"><h3>關聯品牌</h3><div class="lookup-mini-tags">${companies.slice(0,30).map(n=>badge(n,'blue')).join('')}</div></section>`:''}
+  ${parents.length?`<section class="lookup-detail-section"><h3>關聯製造商</h3><div class="lookup-mini-tags">${parents.slice(0,12).map(n=>badge(n)).join('')}</div></section>`:''}
+  <details class="lookup-evidence"><summary>查看工廠別名與識別資訊</summary><div>${(f.aliases||[]).slice(0,18).map(x=>`<div>${safe(x)}</div>`).join('')||'無其他名稱記錄'}</div></details>
+  <p class="lookup-detail-disclaimer">以上來自維護者提供的歷史資料，僅供內部查詢，不表示目前仍有合約或服務進行中。來源未連結不等於沒有合作；若用於正式決策，請與資料維護者確認。</p></div>`;
 }
 function openDetail(id){const f=state.model?.byMaster.get(id);if(!f){toast('找不到這筆工廠資料');return}
  const d=$('#drawer');d.innerHTML=detailHTML(f);d.hidden=false;document.body.style.overflow='hidden';d.querySelector('button')?.focus();
@@ -130,9 +184,16 @@ const download=(name,content,mime='application/json')=>{
  const blob=new Blob([content],{type:mime});const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);
 };
 function doScreen(form){
- state.screenInputs=Object.fromEntries(new FormData(form));
+ const entry=Object.fromEntries(new FormData(form));
+ const query=String(entry.query||'').trim();
+ if(!query){toast('請輸入工廠名稱或 Higg ID');return}
+ if(!state.model){toast('此裝置尚未載入查詢資料');return}
+ const higg=query.match(/^(?:higg(?:\s*id)?[\s:#：-]*)?(\d{3,8})$/i)?.[1]||'';
+ state.screenInputs={query,name:higg?'':query,higg,country:String(entry.country||'').trim(),brand:String(entry.brand||'').trim()};
  state.screenResults=screenFacility(state.model,state.screenInputs);
- state.screenBatch=null;render();
+ state.screenBatch=null;
+ render();
+ document.querySelector('#result-anchor')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function doBatch(){
  const text=$('#batch-input')?.value.trim();if(!text){toast('請先貼上多行資料');return}
@@ -147,17 +208,9 @@ function doBatch(){
 function refreshLibrary(){if(state.page!=='library')return;
  const n=$('#library-results');if(n)n.innerHTML=libraryTable();
 }
-function go(page){if(!titles[page])return;state.page=page;closeDetail();render();window.scrollTo({top:0,behavior:'instant'});}
-async function readInput(file){
- if(!file)return;toast('正在本機解析資料，請勿關閉此畫面…',true);
- try{
-  let data;
-  if(file.name.toLowerCase().endsWith('.json')){data=validateData(JSON.parse(await file.text()));}
-  else if(/\.(xlsx|xlsm)$/i.test(file.name)){data=validateData(await importWorkbook(file,text=>toast(text,true)));}
-  else throw new Error('目前只支援 .xlsm、.xlsx 或 JSON 私人備份。');
-  state.pending=data;go('updates');toast('解析完成！請檢查下方筆數並確認更新。');
-  document.querySelector('.diff')?.scrollIntoView({block:'center',behavior:'smooth'});
- }catch(e){console.error(e);toast(`匯入未完成：${e.message}`)}
+function go(page){
+ state.page=page==='updates'?'updates':'overview';
+ closeDetail();render();window.scrollTo({top:0,behavior:'instant'});
 }
 function getDB(){return new Promise((resolve,reject)=>{
  const req=indexedDB.open('screening-atlas-private-v1',1);
