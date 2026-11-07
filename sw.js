@@ -1,7 +1,7 @@
 /* Screening Atlas app shell only. Imported Excel/JSON data is never cached here. */
-const CACHE = 'screening-atlas-shell-v5-20261107';
+const CACHE = 'screening-atlas-shell-v6-20261107';
 const FILES = [
-  './', './index.html', './styles.css', './js/app.js', './js/excel.js',
+  './', './index.html', './styles.css?v=6', './js/app.js?v=6', './js/excel.js',
   './js/model.js', './assets/icon.svg', './favicon.png',
   './apple-touch-icon.png', './apple-touch-icon-screening-v4.png',
   './assets/icon-192-v4.png', './assets/icon-512-v4.png',

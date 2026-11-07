@@ -18,10 +18,15 @@ function badge(label,kind=''){return `<span class="tag ${kind}">${safe(label)}</
 function programBadges(f){return f.programs.slice(0,4).map(p=>badge(p,p==='CTS'?'green':p==='CTM'?'blue':'')).join('')||(f.strategics.length?badge('Strategic only','blue'):f.assessments.length?badge('Assessment only','blue'):f.parents.length?badge('Manufacturer only','gray'):badge('來源紀錄','gray'))}
 function pageHead(kicker,title,desc='',right=''){return `<div class="page-head"><div><div class="page-kicker">${safe(kicker)}</div><h1 class="page-title">${title}</h1>${desc?`<p class="page-desc">${desc}</p>`:''}</div>${right}</div>`}
 function buttonAction(action,label,kind='outline-btn',iconName=''){return `<button class="${kind}" data-action="${action}">${iconName?ICON(iconName):''}${safe(label)}</button>`}
-function startImport(){ $('#file-picker').click(); }
+function nativeFileInput(label,help='',variant=''){
+ return `<label class="native-import-cta ${variant}"><span class="native-import-main">${ICON('upload')}<strong>${safe(label)}</strong></span>${help?`<span class="native-import-help">${safe(help)}</span>`:''}<input class="native-import-input" type="file" accept=".xlsm,.xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12" aria-label="${safe(label)}"></label>`;
+}
+function startImport(){ const el=$('.native-import-input')||$('#file-picker');el?.click(); }
 function shortStatus(f){return f.external?badge('Source only','blue'):f.risks.length?badge('需複核','orange'):f.strategics.length?badge('Strategic','green'):badge('已收錄','gray')}
 function renderEmptyLanding(){
- return `<section class="lookup-state"><div class="lookup-state-icon">${ICON('lock')}</div><h2>這台裝置尚未載入查詢資料</h2><p>請由資料維護者在本機準備最新版 Screening 資料後再查詢。網頁程式本身不包含公司的完整工廠資料。</p><div class="lookup-muted">一般使用者無需查看 Excel Master List 或資料維護頁面。</div></section>`;
+ return `<section class="lookup-state lookup-empty-data"><div class="lookup-state-icon">${ICON('database')}</div><h2>先載入這台 iPhone 的查詢資料</h2><p>首次使用或換新裝置時，請選取你維護的 Screening Tool Excel（.xlsm／.xlsx），或之前備份的 JSON。資料只在這台裝置解析，不會上傳到 GitHub。</p>
+ ${nativeFileInput('從 iPhone 選擇 Excel／JSON','在「檔案」App 內選取，匯入前可先檢查紀錄筆數。','native-import-first')}
+ <div class="lookup-muted">找不到 Excel？先把檔案存進 iPhone 的「檔案」App，再返回此畫面選取。</div></section>`;
 }
 function renderOverview(){
  const v=state.screenInputs||{};
@@ -131,7 +136,7 @@ function renderUpdates(){
  const fileName=state.data?.meta?.name||'尚未匯入資料';
  return `<div class="manage-back"><button data-view="overview" class="outline-btn">${ICON('arrow')} 返回工廠搜尋</button></div>
  <div class="manage-head"><div class="lookup-eyebrow">MAINTAINER WORKSPACE · LOCAL ONLY</div><h1>資料更新</h1><p>僅供資料維護者操作。你的 Excel 仍是主資料來源；本頁不會上傳檔案到 GitHub。</p></div>
- <div class="manage-grid"><section class="card card-pad"><h2>匯入新版 Excel</h2><p>支援 .xlsm、.xlsx 和私人 JSON 備份；僅在此裝置解析，不會執行 VBA。</p><button class="import-zone" data-action="pick-file" type="button">${ICON('upload')}<h3>選擇檔案</h3><p>匯入後會先顯示差異，確認才會取代這台裝置的資料。</p></button></section>
+ <div class="manage-grid"><section class="card card-pad"><h2>匯入新版 Excel</h2><p>支援 .xlsm、.xlsx 和私人 JSON 備份；僅在此裝置解析，不會執行 VBA。</p>${nativeFileInput('選擇新版 Excel／JSON','點此打開 iPhone「檔案」選擇器；解析後先預覽筆數差異，再確認更新。','native-import-zone')}<p class="native-import-tip">如果 OneDrive 等雲端檔案無法選取，請先在「檔案」App 將檔案複製到「我的 iPhone」或「下載項目」後再選。</p></section>
  <section class="card card-pad"><h2>目前本機版本</h2><div class="source-row"><strong>檔案</strong><span>${safe(clip(fileName,32))}</span></div><div class="source-row"><strong>匯入日期</strong><span>${safe(state.data?.meta?.created||'—')}</span></div>
  ${m?`<div class="manage-actions">${buttonAction('export-backup','下載私人 JSON 備份','outline-btn','download')}${state.previous?buttonAction('restore-previous','回復上一版','soft-btn','clock'):''}</div>`:'<p class="manage-muted">目前沒有已匯入版本。</p>'}
  </section></div>
@@ -211,6 +216,7 @@ function refreshLibrary(){if(state.page!=='library')return;
 }
 function go(page){
  state.page=page==='updates'?'updates':'overview';
+ document.querySelector('.screening-tools')?.removeAttribute('open');
  closeDetail();render();window.scrollTo({top:0,behavior:'instant'});
 }
 async function readInput(file){
@@ -269,7 +275,13 @@ document.addEventListener('click',async e=>{
  }
  if(action==='export-batch'&&state.screenBatch){download('screening-batch-results.csv',toCSV(state.screenBatch),'text/csv;charset=utf-8');return}
 });
-$('#file-picker').addEventListener('change',e=>{const f=e.target.files?.[0];e.target.value='';readInput(f)});
+document.addEventListener('change',e=>{
+ if(!e.target.matches('.native-import-input, #file-picker'))return;
+ const f=e.target.files?.[0];
+ if(!f)return;
+ e.target.value='';
+ readInput(f);
+});
 document.addEventListener('submit',e=>{
  if(e.target.id==='hero-form'){
   e.preventDefault();const query=new FormData(e.target).get('quick-search')||'';
@@ -301,5 +313,5 @@ document.addEventListener('keydown',e=>{
   const data=await load('current');state.previous=await load('previous');
   if(data){state.data=validateData(data);state.model=createModel(state.data);render()}
  }catch(e){console.error(e);toast('目前無法開啟本機儲存空間；請勿使用私密瀏覽模式。')}
- if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(()=>{});
+ if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
 })();

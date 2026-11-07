@@ -181,3 +181,39 @@ body{background:var(--paper)}
  .manage-grid{grid-template-columns:1fr}
  .lookup-drawer{width:100%}
 }
+
+/* iPhone Home Screen: a discoverable local importer and native file selection. */
+.screening-tools{position:relative;margin-left:3px;flex-shrink:0;z-index:20}
+.screening-tools>summary{display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;width:40px;height:40px;border:1px solid #e1eae5;border-radius:12px;background:#f7faf7;color:#376d5b;font-size:24px;font-weight:800;letter-spacing:1px}
+.screening-tools>summary::-webkit-details-marker{display:none}
+.screening-tools[open]>summary{background:#e8f3eb;border-color:#bcd8c5}
+.screening-tools-menu{position:absolute;right:0;top:46px;width:min(310px,calc(100vw - 26px));background:#fff;border:1px solid #dae6de;border-radius:16px;padding:8px;box-shadow:0 16px 46px rgba(17,45,31,.16);z-index:100}
+.screening-tools-menu button{display:flex;gap:12px;align-items:center;width:100%;border:0;border-radius:10px;text-align:left;background:#f5faf6;padding:14px;color:#22483c}
+.screening-tools-menu button:hover{background:#e9f5eb}
+.screening-tools-menu button svg{flex-shrink:0}
+.screening-tools-menu button strong,.screening-tools-menu button small{display:block}
+.screening-tools-menu button strong{font-size:13px}
+.screening-tools-menu button small{margin-top:5px;font-size:11px;color:#6f9786}
+.screening-tools-menu>p{font-size:10px;line-height:1.6;color:#9aac9f;margin:10px 9px}
+.native-import-cta{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;cursor:pointer;min-height:122px;padding:20px;border:1.5px dashed #9fbdab;border-radius:15px;background:#f3faf4;text-align:center;color:#245645}
+.native-import-main{display:flex;align-items:center;justify-content:center;gap:10px}
+.native-import-main strong{font-size:15px}
+.native-import-main svg{width:21px;height:21px;color:#388268}
+.native-import-help{font-size:11px;line-height:1.6;color:#7c9b8b}
+.native-import-input{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.native-import-cta:hover{border-color:#4c9e78;background:#eaf6eb}
+.native-import-cta:focus-within{outline:3px solid #91cdb7;outline-offset:2px}
+.native-import-first{max-width:390px;margin:22px auto 14px;min-height:91px;padding:16px}
+.native-import-first .native-import-main strong{font-size:14px}
+.native-import-first .native-import-help{font-size:10px}
+.native-import-zone{margin-top:17px;min-height:155px}
+.native-import-tip{font-size:11px!important;line-height:1.7;color:#829b8c;margin-top:12px}
+@media(max-width:720px){
+ .simple-header{gap:9px}
+ .simple-header-status{max-width:130px}
+ .screening-tools{margin-left:auto}
+ .screening-tools>summary{width:38px;height:38px}
+ .screening-tools-menu{right:-2px}
+ .native-import-first{width:100%}
+ .lookup-empty-data{padding:29px 17px}
+}
