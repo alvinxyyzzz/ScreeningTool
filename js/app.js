@@ -19,7 +19,7 @@ function programBadges(f){return f.programs.slice(0,4).map(p=>badge(p,p==='CTS'?
 function pageHead(kicker,title,desc='',right=''){return `<div class="page-head"><div><div class="page-kicker">${safe(kicker)}</div><h1 class="page-title">${title}</h1>${desc?`<p class="page-desc">${desc}</p>`:''}</div>${right}</div>`}
 function buttonAction(action,label,kind='outline-btn',iconName=''){return `<button class="${kind}" data-action="${action}">${iconName?ICON(iconName):''}${safe(label)}</button>`}
 function nativeFileInput(label,help='',variant=''){
- return `<label class="native-import-cta ${variant}"><span class="native-import-main">${ICON('upload')}<strong>${safe(label)}</strong></span>${help?`<span class="native-import-help">${safe(help)}</span>`:''}<input class="native-import-input" type="file" accept=".xlsm,.xlsx,.json,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel.sheet.macroEnabled.12" aria-label="${safe(label)}"></label>`;
+ return `<label class="native-import-cta ${variant}"><span class="native-import-main">${ICON('upload')}<strong>${safe(label)}</strong></span>${help?`<span class="native-import-help">${safe(help)}</span>`:''}<input class="native-import-input" type="file" aria-label="${safe(label)}"></label>`;
 }
 function startImport(){ const el=$('.native-import-input')||$('#file-picker');el?.click(); }
 function shortStatus(f){return f.external?badge('Source only','blue'):f.risks.length?badge('需複核','orange'):f.strategics.length?badge('Strategic','green'):badge('已收錄','gray')}
