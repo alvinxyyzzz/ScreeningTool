@@ -127,6 +127,7 @@ export function screenFacility(model,{name='',higg='',country='',brand=''}={}){
   const results=[];
   for(const f of model.allFacilities){
     if(qc && !f.countries.includes(qc))continue;
+    if(qb && !f.brands.some(b=>normalized(b).includes(qb)||qb.includes(normalized(b))))continue;
     const idMatch=queryIds.some(id=>f.higgs.includes(id));
     const nearNames=f.aliases.map(normalized);
     let score=0,reason='';

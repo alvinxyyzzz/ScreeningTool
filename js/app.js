@@ -200,7 +200,8 @@ function doBatch(){
  const inputs=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,200);
  state.screenBatch=inputs.map(input=>{
   const [name='',country='',higg='']=input.split(/[,，\t]/).map(x=>x.trim());
-  const matches=screenFacility(state.model,{name,country,higg}),best=matches[0];
+  const higgOnly=/^\d{3,8}$/.test(name)&&!country&&!higg;
+  const matches=screenFacility(state.model,{name:higgOnly?'':name,country,higg:higgOnly?name:higg}),best=matches[0];
   return {input,name,country,higg,match:best?.facility.name||'',matchedHigg:best?.facility.higgs.join(' / ')||'',score:best?.score||0,confidence:best?.tier||'none',recordCount:best?.facility.engagements.length||0,reviewRequired:best?.facility.risks.length?'YES':'NO'};
  });
  render();toast(`已完成 ${state.screenBatch.length} 筆批次篩查`);
@@ -291,8 +292,8 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Escape'){closeDetail();return}
  const typing=['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
  if(!typing&&!e.metaKey&&!e.ctrlKey){if(e.key==='g')go('overview');if(e.key==='s')go('screen')}
- if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();go('screen');$('#screen-name')?.focus()}
- if(e.key==='Enter'&&e.target.closest('.result-card')){e.preventDefault();openDetail(e.target.closest('.result-card').dataset.id)}
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();go('screen');$('#screen-query')?.focus()}
+ if(e.key==='Enter'&&e.target.closest('.lookup-result')){e.preventDefault();openDetail(e.target.closest('.lookup-result').dataset.id)}
 });
 (async function init(){
  render();
